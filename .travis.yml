@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t lendavauto/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true lendavauto/react-test npm test
+
+after_success:
+  - docker build -t lendavauto/multi-client ./client
+  - docker build -t lendavauto/multi-nginx ./nginx
+  - docker build -t lendavauto/multi-server ./server
+  - docker build -t lendavauto/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push lendavauto/multi-client
+  - docker push lendavauto/multi-nginx
+  - docker push lendavauto/multi-server
+  - docker push lendavauto/multi-worker
